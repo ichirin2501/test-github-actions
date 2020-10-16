@@ -25,7 +25,7 @@ jobs:
         docker run \
           -d \
           --name mysql-skeema \
-          -v $(pwd)/sql/:/docker-entrypoint-initdb.d/ \
+          -v ${{ github.workspace }}/sql/:/docker-entrypoint-initdb.d/ \
           -e MYSQL_DATABASE=test \
           -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
           -e TZ=Asia/Tokyo \
@@ -37,6 +37,9 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: mysql show tables
-      run: mysql -u root -h 127.0.0.1 test -e 'show tables'
+    - name: skeema diff
+      run: |
+        set -o pipefail
+        cd ${{ github.workspace }}/sql
+        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -e 's/^USE /-- skeema:ddl:use /g' | sed -n '/^-- skeema:ddl:use /p;/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | tee /tmp/skeema-ci/skeema-diff.sql
 
