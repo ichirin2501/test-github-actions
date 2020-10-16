@@ -41,5 +41,9 @@ jobs:
       run: |
         set -o pipefail
         cd ${{ github.workspace }}/sql
-        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -e 's/^USE /-- skeema:ddl:use /g' | sed -n '/^-- skeema:ddl:use /p;/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | tee /tmp/skeema-ci/skeema-diff.sql
+        /tmp/skeema-ci/skeema diff skeema-diff-ci --allow-unsafe | sed -e 's/^USE.*//g' | sed -e 's/^-- instance:.*//g' | tee /tmp/skeema-ci/skeema-diff.sql
 
+    - uses: marocchino/sticky-pull-request-comment@v1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        path: /tmp/skeema-ci/skeema-diff.sql
