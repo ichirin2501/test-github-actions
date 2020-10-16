@@ -11,6 +11,10 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: uguu
+      run: |
+        git merge-base HEAD master
+
     - name: set merge-base
       run: |
         hash=$(git merge-base HEAD master)
