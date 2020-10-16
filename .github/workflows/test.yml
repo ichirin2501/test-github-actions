@@ -14,10 +14,15 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+    - name: set merge-base
+      run: |
+        hash=$(git merge-base HEAD master)
+        echo "::set-output name=MergeBase::${hash}"
+      id: merge-base
 
     - name: checkout and docker run
       run: |
-        git checkout $(git merge-base HEAD master)
+        git checkout ${{ steps.merge-base.outputs.MergeBase }}
         docker run \
           -d \
           --name mysql-skeema \
@@ -28,6 +33,6 @@ jobs:
           -p 3306:3306 \
           mysql:5.7
 
-    - name: test get merge-base
-      run: which mysql
+    - name: mysql show tables
+      run: mysql -u root -h 127.0.0.1 test -e 'show tables'
 
