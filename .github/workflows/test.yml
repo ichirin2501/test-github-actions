@@ -9,22 +9,25 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
+        ref: master
         fetch-depth: 0
     - uses: actions/checkout@v2
       with:
-        ref: master
         fetch-depth: 0
 
-    - name: uguu
+    - name: checkout and docker run
       run: |
-        git merge-base HEAD master
-
-    - name: set merge-base
-      run: |
-        hash=$(git merge-base HEAD master)
-        echo "::set-output name=MergeBase::${hash}"
-      id: merge-base
+        git checkout $(git merge-base HEAD master)
+        docker run \
+          -d \
+          --name mysql-skeema \
+          -v $(pwd)/sql/:/docker-entrypoint-initdb.d/ \
+          -e MYSQL_DATABASE=test \
+          -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+          -e TZ=Asia/Tokyo \
+          -p 3306:3306 \
+          mysql:5.7
 
     - name: test get merge-base
-      run: echo 'The MergeBase is' ${{ steps.merge-base.outputs.MergeBase }}
+      run: which mysql
 
