@@ -1,32 +1,27 @@
 name: Test
 on:
-  push:
+  pull_request:
+    branches:
+    - master
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - uses: actions/checkout@v2
-      with:
-        ref: master
-        fetch-depth: 0
-
-    - name: git head
-      run: git log --oneline
- 
-    - name: set merge-base
+    - name: get skeema
       run: |
-        hash=$(git merge-base HEAD master)
-        echo "::set-output name=MergeBase::${hash}"
-      id: merge-base
+        mkdir -p /tmp/skeema-ci
+        cd /tmp/skeema-ci
+        curl -s -L https://github.com/skeema/skeema/releases/download/v1.4.5/skeema_1.4.5_linux_amd64.tar.gz > skeema.tar.gz
+        tar xzf skeema.tar.gz skeema
+
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.base.sha }}
 
     - name: checkout and docker run
       run: |
-        git checkout ${{ steps.merge-base.outputs.MergeBase }}
         docker run \
           -d \
           --name mysql-skeema \
@@ -36,6 +31,11 @@ jobs:
           -e TZ=Asia/Tokyo \
           -p 3306:3306 \
           mysql:5.7
+        sleep 15
+
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
 
     - name: mysql show tables
       run: mysql -u root -h 127.0.0.1 test -e 'show tables'
