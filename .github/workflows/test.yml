@@ -46,4 +46,5 @@ jobs:
     - uses: marocchino/sticky-pull-request-comment@v1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        header: DDL
         path: /tmp/skeema-ci/skeema-diff.sql
