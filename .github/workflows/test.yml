@@ -8,7 +8,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      fetch-depth: 0
+      with:
+        fetch-depth: 0
 
     - name: set merge-base
       run: |
