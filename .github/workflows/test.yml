@@ -47,9 +47,9 @@ jobs:
 
     - name: create comment
       run: |
-        echo "### |'-') Automatically generated schema diff statements" >> /tmp/comment.txt
-        echo "Compare: https://github.com/${{ github.repository_owner }}/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" >> /tmp/comment.txt
-        echo "\`\`\`" >> /tmp/comment.txt
+        echo "### Automatically generated schema diff statements" >> /tmp/comment.txt
+        echo "Compare: https://github.com/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" >> /tmp/comment.txt
+        echo "\`\`\`sql" >> /tmp/comment.txt
         cat /tmp/skeema-ci/skeema-diff.sql >> /tmp/comment.txt
         echo "\`\`\`" >> /tmp/comment.txt
 
