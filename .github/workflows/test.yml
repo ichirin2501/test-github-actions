@@ -7,17 +7,27 @@ on:
     - 'sql/*.sql'
 env:
   TZ: Asia/Tokyo
+  skeema_version: '1.4.5'
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/cache@v2
+      with:
+        path: /tmp/skeema-ci
+        key: ${{ runner.os }}-${{ env.skeema_version }}
+
     - name: get skeema
       run: |
+        if [ -f /tmp/skeema-ci/skeema ]; then
+          echo "exists skeema binary"
+          exit 0
+        fi
         mkdir -p /tmp/skeema-ci
         cd /tmp/skeema-ci
-        curl -s -L https://github.com/skeema/skeema/releases/download/v1.4.5/skeema_1.4.5_linux_amd64.tar.gz > skeema.tar.gz
+        curl -s -L https://github.com/skeema/skeema/releases/download/v${{ env.skeema_version }}/skeema_${{ env.skeema_version }}_linux_amd64.tar.gz > skeema.tar.gz
         tar xzf skeema.tar.gz skeema
 
     - uses: actions/checkout@v2
