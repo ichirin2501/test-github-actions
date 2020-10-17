@@ -93,3 +93,4 @@ jobs:
       with:
         comment-id: ${{ steps.magic-comment.outputs.comment-id }}
         body: ${{ steps.comment-body.outputs.body }}
+        edit-mode: replace
