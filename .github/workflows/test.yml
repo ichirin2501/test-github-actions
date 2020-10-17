@@ -20,6 +20,11 @@ jobs:
         curl -s -L https://github.com/skeema/skeema/releases/download/v1.4.5/skeema_1.4.5_linux_amd64.tar.gz > skeema.tar.gz
         tar xzf skeema.tar.gz skeema
 
+    - uses: actions/cache@v2
+      with:
+        path: /tmp/skeema-ci
+        key: ${{ runner.os }}-${{ hashFiles('/tmp/skeema-ci/**') }}
+
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.base.sha }}
@@ -45,7 +50,7 @@ jobs:
       run: |
         set -o pipefail
         cd ${{ github.workspace }}/sql
-        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-ci/skeema-diff.sql
+        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-diff.sql
 
     - name: create comment
       run: |
@@ -53,7 +58,7 @@ jobs:
         echo "Update Date: $(date --rfc-3339=seconds)" >> /tmp/comment.txt
         echo "Compare: https://github.com/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" >> /tmp/comment.txt
         echo "\`\`\`sql" >> /tmp/comment.txt
-        cat /tmp/skeema-ci/skeema-diff.sql >> /tmp/comment.txt
+        cat /tmp/skeema-diff.sql >> /tmp/comment.txt
         echo "\`\`\`" >> /tmp/comment.txt
 
     - uses: marocchino/sticky-pull-request-comment@v1
