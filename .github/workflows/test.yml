@@ -1,0 +1,52 @@
+name: Test
+on:
+  pull_request:
+    branches:
+    - master
+    paths:
+    - 'sql/*.sql'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: get skeema
+      run: |
+        mkdir -p /tmp/skeema-ci
+        cd /tmp/skeema-ci
+        curl -s -L https://github.com/skeema/skeema/releases/download/v1.4.5/skeema_1.4.5_linux_amd64.tar.gz > skeema.tar.gz
+        tar xzf skeema.tar.gz skeema
+
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.base.sha }}
+
+    - name: checkout and docker run
+      run: |
+        docker run \
+          -d \
+          --name mysql-skeema \
+          -v ${{ github.workspace }}/sql/:/docker-entrypoint-initdb.d/ \
+          -e MYSQL_DATABASE=test \
+          -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+          -e TZ=Asia/Tokyo \
+          -p 3306:3306 \
+          mysql:5.7
+        sleep 15
+
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: skeema diff
+      run: |
+        set -o pipefail
+        cd ${{ github.workspace }}/sql
+        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -e 's/^USE /-- skeema:ddl:use /g' | sed -n '/^-- skeema:ddl:use /p;/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | tee /tmp/skeema-ci/skeema-diff.sql
+
+    - uses: marocchino/sticky-pull-request-comment@v1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        header: DDL
+        path: /tmp/skeema-ci/skeema-diff.sql
