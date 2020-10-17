@@ -20,11 +20,8 @@ jobs:
         key: ${{ runner.os }}-${{ env.skeema_version }}
 
     - name: get skeema
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        if [ -f /tmp/skeema-ci/skeema ]; then
-          echo "exists skeema binary"
-          exit 0
-        fi
         mkdir -p /tmp/skeema-ci
         cd /tmp/skeema-ci
         curl -s -L https://github.com/skeema/skeema/releases/download/v${{ env.skeema_version }}/skeema_${{ env.skeema_version }}_linux_amd64.tar.gz > skeema.tar.gz
@@ -52,12 +49,15 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
 
     - name: skeema diff
+      id: skeema-diff
       run: |
         set -o pipefail
         cd ${{ github.workspace }}/sql
         /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-diff.sql
+        echo "::set-output name=diff::$(cat /tmp/skeema-diff.sql | wc -l)"
 
-    - name: create comment
+    - name: create body
+      id: comment-body
       run: |
         echo "_Automatically generated schema diff statements_" >> /tmp/comment.txt
         echo "Update Date: $(date --rfc-3339=seconds)" >> /tmp/comment.txt
@@ -65,9 +65,30 @@ jobs:
         echo "\`\`\`sql" >> /tmp/comment.txt
         cat /tmp/skeema-diff.sql >> /tmp/comment.txt
         echo "\`\`\`" >> /tmp/comment.txt
+        echo "<!-- skeema:magic:comment -->" >> /tmp/comment.txt
+        body=$(cat /tmp/comment.txt)
+        body="${body//'%'/'%25'}"
+        body="${body//$'\n'/'%0A'}"
+        body="${body//$'\r'/'%0D'}"
+        echo ::set-output name=body::$body
 
-    - uses: marocchino/sticky-pull-request-comment@v1
+    - name: find magic comment
+      uses: peter-evans/find-comment@v1
+      id: magic-comment
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        header: DDL
-        path: /tmp/comment.txt
+        issue-number: ${{ github.event.pull_request.number }}
+        body-includes: "<!-- skeema:magic:comment -->"
+
+    - name: create comment
+      if: ${{ steps.magic-comment.outputs.comment-id == 0 && steps.skeema-diff.outputs.diff != 0 }}
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: ${{ steps.comment-body.outputs.body }}
+
+    - name: update comment
+      if: ${{ steps.magic-comment.outputs.comment-id != 0 && steps.skeema-diff.outputs.diff != 0 }}
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        comment-id: ${{ steps.magic-comment.outputs.comment-id }}
+        body: ${{ steps.comment-body.outputs.body }}
