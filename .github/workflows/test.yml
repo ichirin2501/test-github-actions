@@ -5,6 +5,8 @@ on:
     - master
     paths:
     - 'sql/*.sql'
+env:
+  TZ: Asia/Tokyo
 
 jobs:
   test:
@@ -30,7 +32,7 @@ jobs:
           -v ${{ github.workspace }}/sql/:/docker-entrypoint-initdb.d/ \
           -e MYSQL_DATABASE=test \
           -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
-          -e TZ=Asia/Tokyo \
+          -e TZ=${{ env.TZ }} \
           -p 3306:3306 \
           mysql:5.7
         sleep 15
@@ -43,10 +45,19 @@ jobs:
       run: |
         set -o pipefail
         cd ${{ github.workspace }}/sql
-        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -e 's/^USE /-- skeema:ddl:use /g' | sed -n '/^-- skeema:ddl:use /p;/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | tee /tmp/skeema-ci/skeema-diff.sql
+        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-diff.sql
+
+    - name: create comment
+      run: |
+        echo "_Automatically generated schema diff statements_" >> /tmp/comment.txt
+        echo "Update Date: $(date --rfc-3339=seconds)" >> /tmp/comment.txt
+        echo "Compare: https://github.com/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" >> /tmp/comment.txt
+        echo "\`\`\`sql" >> /tmp/comment.txt
+        cat /tmp/skeema-diff.sql >> /tmp/comment.txt
+        echo "\`\`\`" >> /tmp/comment.txt
 
     - uses: marocchino/sticky-pull-request-comment@v1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         header: DDL
-        path: /tmp/skeema-ci/skeema-diff.sql
+        path: /tmp/comment.txt
