@@ -5,6 +5,8 @@ on:
     - master
     paths:
     - 'sql/*.sql'
+env:
+  TZ: Asia/Tokyo
 
 jobs:
   test:
@@ -30,7 +32,7 @@ jobs:
           -v ${{ github.workspace }}/sql/:/docker-entrypoint-initdb.d/ \
           -e MYSQL_DATABASE=test \
           -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
-          -e TZ=Asia/Tokyo \
+          -e TZ=${{ env.TZ }} \
           -p 3306:3306 \
           mysql:5.7
         sleep 15
