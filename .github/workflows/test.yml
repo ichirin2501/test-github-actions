@@ -59,8 +59,9 @@ jobs:
     - name: skeema diff
       id: skeema-diff
       run: |
+        set -o pipefail
         cd ${{ github.workspace }}/sql
-        /tmp/skeema-ci/skeema diff skeema-diff-ci --allow-unsafe 2>&1 | grep -v -e '\[INFO\]' -e '^\s*$' -e '^USE ' -e '^-- instance:' | tee /tmp/skeema-diff.sql
+        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-diff.sql
         echo "::set-output name=diff::$(cat /tmp/skeema-diff.sql | wc -c)"
 
     - name: create body
@@ -69,7 +70,7 @@ jobs:
         echo "_Automatically generated schema diff statements_" >> /tmp/comment.txt
         echo "Update Date: $(date +'%Y-%m-%d %H:%M:%S %z')" >> /tmp/comment.txt
         echo "Compare: https://github.com/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" >> /tmp/comment.txt
-        echo "\`\`\`" >> /tmp/comment.txt
+        echo "\`\`\`sql" >> /tmp/comment.txt
         cat /tmp/skeema-diff.sql >> /tmp/comment.txt
         echo "\`\`\`" >> /tmp/comment.txt
         echo "<!-- skeema:magic:comment -->" >> /tmp/comment.txt
