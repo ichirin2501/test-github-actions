@@ -33,11 +33,17 @@ jobs:
 
     - name: docker run
       run: |
+        cat <<EOF > /tmp/my.cnf
+        [mysqld]
+        sql_mode = STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+        character_set_server = utf8
+        skip_character_set_client_handshake
+        EOF
         docker run \
           -d \
           --name mysql-skeema \
           -v ${{ env.skeema_dir }}:/docker-entrypoint-initdb.d/ \
-          -v ${{ github.workspace }}/.github/skeema-diff.my.cnf:/etc/mysql/conf.d/my.cnf \
+          -v /tmp/my.cnf:/etc/mysql/conf.d/my.cnf \
           -e MYSQL_DATABASE=test \
           -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
           -e TZ=${{ env.TZ }} \
