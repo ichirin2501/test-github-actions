@@ -6,6 +6,7 @@ on:
 env:
   TZ: Asia/Tokyo
   skeema_version: '1.4.5'
+  skeema_dir: ${{ github.workspace }}/sql
 
 jobs:
   test:
@@ -35,7 +36,8 @@ jobs:
         docker run \
           -d \
           --name mysql-skeema \
-          -v ${{ github.workspace }}/sql/:/docker-entrypoint-initdb.d/ \
+          -v ${{ env.skeema_dir }}:/docker-entrypoint-initdb.d/ \
+          -v ${{ github.workspace }}/.github/skeema-diff.my.cnf:/etc/mysql/conf.d/my.cnf \
           -e MYSQL_DATABASE=test \
           -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
           -e TZ=${{ env.TZ }} \
@@ -60,7 +62,7 @@ jobs:
       id: skeema-diff
       run: |
         set -o pipefail
-        cd ${{ github.workspace }}/sql
+        cd ${{ env.skeema_dir }}
         /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-diff.sql
         echo "::set-output name=diff::$(cat /tmp/skeema-diff.sql | wc -c)"
 
