@@ -59,7 +59,6 @@ jobs:
     - name: skeema diff
       id: skeema-diff
       run: |
-        set -o pipefail
         cd ${{ github.workspace }}/sql
         /tmp/skeema-ci/skeema diff skeema-diff-ci --allow-unsafe 2>&1 | grep -v -e '\[INFO\]' -e '^\s*$' -e '^USE ' -e '^-- instance:' | tee /tmp/skeema-diff.sql
         echo "::set-output name=diff::$(cat /tmp/skeema-diff.sql | wc -c)"
