@@ -1,0 +1,4 @@
+[mysqld]
+sql_mode = STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+character_set_server = utf8
+skip_character_set_client_handshake
