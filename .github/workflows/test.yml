@@ -30,7 +30,7 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.base.sha }}
 
-    - name: checkout and docker run
+    - name: docker run
       run: |
         docker run \
           -d \
