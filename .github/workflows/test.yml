@@ -3,28 +3,34 @@ on:
   pull_request:
     branches:
     - master
-    paths:
-    - 'sql/*.sql'
 env:
   TZ: Asia/Tokyo
+  skeema_version: '1.4.5'
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/cache@v2
+      id: cache
+      with:
+        path: /tmp/skeema-ci
+        key: ${{ runner.os }}-${{ env.skeema_version }}
+
     - name: get skeema
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p /tmp/skeema-ci
         cd /tmp/skeema-ci
-        curl -s -L https://github.com/skeema/skeema/releases/download/v1.4.5/skeema_1.4.5_linux_amd64.tar.gz > skeema.tar.gz
+        curl -s -L https://github.com/skeema/skeema/releases/download/v${{ env.skeema_version }}/skeema_${{ env.skeema_version }}_linux_amd64.tar.gz > skeema.tar.gz
         tar xzf skeema.tar.gz skeema
 
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.base.sha }}
 
-    - name: checkout and docker run
+    - name: docker run
       run: |
         docker run \
           -d \
@@ -35,29 +41,63 @@ jobs:
           -e TZ=${{ env.TZ }} \
           -p 3306:3306 \
           mysql:5.7
-        sleep 15
+        j=0
+        while ! mysql -h 127.0.0.1 -P 3306 -u root -e 'select 1' >/dev/null 2>&1; do
+          j=$((j+1))
+          if [ $j -ge 30 ]; then
+            echo >&2 "[$(date +'%Y-%m-%d %H:%M:%S %z')] timeout"
+            exit 1
+          fi
+          echo "[$(date +'%Y-%m-%d %H:%M:%S %z')] waiting for mysql server... $j/30"
+          sleep 1
+        done
 
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
 
     - name: skeema diff
+      id: skeema-diff
       run: |
         set -o pipefail
         cd ${{ github.workspace }}/sql
         /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-diff.sql
+        echo "::set-output name=diff::$(cat /tmp/skeema-diff.sql | wc -l)"
 
-    - name: create comment
+    - name: create body
+      id: comment-body
       run: |
         echo "_Automatically generated schema diff statements_" >> /tmp/comment.txt
-        echo "Update Date: $(date --rfc-3339=seconds)" >> /tmp/comment.txt
+        echo "Update Date: $(date +'%Y-%m-%d %H:%M:%S %z')" >> /tmp/comment.txt
         echo "Compare: https://github.com/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" >> /tmp/comment.txt
         echo "\`\`\`sql" >> /tmp/comment.txt
         cat /tmp/skeema-diff.sql >> /tmp/comment.txt
         echo "\`\`\`" >> /tmp/comment.txt
+        echo "<!-- skeema:magic:comment -->" >> /tmp/comment.txt
+        body=$(cat /tmp/comment.txt)
+        body="${body//'%'/'%25'}"
+        body="${body//$'\n'/'%0A'}"
+        body="${body//$'\r'/'%0D'}"
+        echo ::set-output name=body::$body
 
-    - uses: marocchino/sticky-pull-request-comment@v1
+    - name: find magic comment
+      uses: peter-evans/find-comment@v1
+      id: magic-comment
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        header: DDL
-        path: /tmp/comment.txt
+        issue-number: ${{ github.event.pull_request.number }}
+        body-includes: "<!-- skeema:magic:comment -->"
+
+    - name: create comment
+      if: ${{ steps.magic-comment.outputs.comment-id == 0 && steps.skeema-diff.outputs.diff != 0 }}
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: ${{ steps.comment-body.outputs.body }}
+
+    - name: update comment
+      if: ${{ steps.magic-comment.outputs.comment-id != 0 }}
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        comment-id: ${{ steps.magic-comment.outputs.comment-id }}
+        body: ${{ steps.comment-body.outputs.body }}
+        edit-mode: replace
