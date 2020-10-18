@@ -62,7 +62,7 @@ jobs:
         set -o pipefail
         cd ${{ github.workspace }}/sql
         /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-diff.sql
-        echo "::set-output name=diff::$(cat /tmp/skeema-diff.sql | wc -l)"
+        echo "::set-output name=diff::$(cat /tmp/skeema-diff.sql | wc -c)"
 
     - name: create body
       id: comment-body
