@@ -41,7 +41,16 @@ jobs:
           -e TZ=${{ env.TZ }} \
           -p 3306:3306 \
           mysql:5.7
-        sleep 15
+        j=0
+        while ! mysql -h 127.0.0.1 -P 3306 -u root -e 'select 1' >/dev/null 2>&1; do
+          j=$((j+1))
+          if [ $j -ge 30 ]; then
+            echo >&2 "[$(date +'%Y-%m-%d %H:%M:%S %z')] timeout"
+            exit 1
+          fi
+          echo "[$(date +'%Y-%m-%d %H:%M:%S %z')] waiting for mysql server... $j/30"
+          sleep 1
+        done
 
     - uses: actions/checkout@v2
       with:
@@ -59,7 +68,7 @@ jobs:
       id: comment-body
       run: |
         echo "_Automatically generated schema diff statements_" >> /tmp/comment.txt
-        echo "Update Date: $(date --rfc-3339=seconds)" >> /tmp/comment.txt
+        echo "Update Date: $(date +'%Y-%m-%d %H:%M:%S %z')" >> /tmp/comment.txt
         echo "Compare: https://github.com/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" >> /tmp/comment.txt
         echo "\`\`\`sql" >> /tmp/comment.txt
         cat /tmp/skeema-diff.sql >> /tmp/comment.txt
