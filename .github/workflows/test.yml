@@ -36,13 +36,12 @@ jobs:
         cat <<EOF > /tmp/my.cnf
         [mysqld]
         sql_mode = STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
-        character_set_server = utf8
+        character_set_server = utf8mb4
         skip_character_set_client_handshake
         EOF
         docker run \
           -d \
           --name mysql-skeema \
-          -v ${{ env.skeema_dir }}:/docker-entrypoint-initdb.d/ \
           -v /tmp/my.cnf:/etc/mysql/conf.d/my.cnf \
           -e MYSQL_DATABASE=test \
           -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
@@ -58,6 +57,10 @@ jobs:
           fi
           echo "[$(date +'%Y-%m-%d %H:%M:%S %z')] waiting for mysql server... $j/30"
           sleep 1
+        done
+        find ${{ env.skeema_dir }} -maxdepth 1 -name "*.sql" | while read -r fname; do
+          echo "[$(date +'%Y-%m-%d %H:%M:%S %z')] running $fname"
+          mysql -h 127.0.0.1 -P 3306 -u root test < $fname
         done
 
     - uses: actions/checkout@v2
