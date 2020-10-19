@@ -58,7 +58,10 @@ jobs:
           echo "[$(date +'%Y-%m-%d %H:%M:%S %z')] waiting for mysql server... $j/30"
           sleep 1
         done
-        mysql -h 127.0.0.1 -P 3306 -u root test < ${{ env.skeema_dir }}/*.sql
+        find ${{ env.skeema_dir }} -maxdepth 1 -name "*.sql" | while read -r fname; do
+          echo "[$(date +'%Y-%m-%d %H:%M:%S %z'))] running $fname"
+          mysql -h 127.0.0.1 -P 3306 -u root test < $fname
+        done
 
     - uses: actions/checkout@v2
       with:
