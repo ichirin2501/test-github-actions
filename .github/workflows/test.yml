@@ -30,6 +30,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.base.sha }}
+        fetch-depth: 1000
 
     - name: docker run
       run: |
@@ -66,6 +67,10 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 1000
+    - name: merge sitemiru
+      run: |
+        git merge --no-edit --squash ${{ github.event.pull_request.base.sha }}
 
     - name: skeema diff
       id: skeema-diff
@@ -84,6 +89,10 @@ jobs:
         echo "\`\`\`sql" >> /tmp/comment.txt
         cat /tmp/skeema-diff.sql >> /tmp/comment.txt
         echo "\`\`\`" >> /tmp/comment.txt
+        echo "_Note:_" >> /tmp/comment.txt
+        echo "1. This comment will be updated" >> /tmp/comment.txt
+        echo "1. Only the \`sql/\` differences are generated" >> /tmp/comment.txt
+        echo "1. The branch may be old if there are unintended differences. Merging the master branch may fix it" >> /tmp/comment.txt
         echo "<!-- skeema:magic:comment -->" >> /tmp/comment.txt
         body=$(cat /tmp/comment.txt)
         body="${body//'%'/'%25'}"
