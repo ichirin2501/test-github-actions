@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS user_nanika (
   id int(11) unsigned NOT NULL AUTO_INCREMENT,
-  start_at timestamp NOT NULL,
+  `start_at` timestamp NOT NULL,
   end_at timestamp NOT NULL,
   description varchar(256) DEFAULT NULL,
   created timestamp NOT NULL,
