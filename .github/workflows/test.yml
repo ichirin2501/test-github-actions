@@ -30,6 +30,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.base.sha }}
+        fetch-depth: 500
 
     - name: docker run
       run: |
@@ -66,6 +67,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 500
     - name: merge sitemiru
       run: |
         git config user.email ""
