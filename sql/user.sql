@@ -25,3 +25,4 @@ CREATE TABLE `auto_incr_test` (
   KEY idx_created (created)
 ) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb4;
 
+
