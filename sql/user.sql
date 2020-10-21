@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS user_nanika (
 CREATE TABLE `auto_incr_test` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY idx_created (created)
 ) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb4;
 
