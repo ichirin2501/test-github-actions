@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS user_nanika (
   end_at timestamp NOT NULL,
   description varchar(256) DEFAULT NULL,
   created timestamp NOT NULL,
+  updated timestamp NOT NULL,
   PRIMARY KEY (id),
   KEY idx_created (created)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
