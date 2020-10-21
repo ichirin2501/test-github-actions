@@ -68,8 +68,10 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 1000
-    - name: merge sitemiru
+    - name: merge base branch
       run: |
+        git config user.email ""
+        git config user.name "github actions"
         git merge --no-edit --squash ${{ github.event.pull_request.base.sha }}
 
     - name: skeema diff
