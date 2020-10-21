@@ -70,8 +70,6 @@ jobs:
         fetch-depth: 1000
     - name: merge sitemiru
       run: |
-        git config user.email ""
-        git config user.name "github actions"
         git merge --no-edit --squash ${{ github.event.pull_request.base.sha }}
 
     - name: skeema diff
