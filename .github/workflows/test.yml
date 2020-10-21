@@ -68,7 +68,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: merge sitemiru
       run: |
-        git merge ${{ github.event.pull_request.base.sha }}
+        git merge --allow-unrelated-histories --no-edit ${{ github.event.pull_request.base.sha }}
 
     - name: skeema diff
       id: skeema-diff
