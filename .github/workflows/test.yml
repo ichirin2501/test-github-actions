@@ -92,7 +92,6 @@ jobs:
         cat /tmp/skeema-diff.sql >> /tmp/comment.txt
         echo "\`\`\`" >> /tmp/comment.txt
         echo "_Note:_" >> /tmp/comment.txt
-        echo "1. This comment will be updated" >> /tmp/comment.txt
         echo "1. Only the \`sql/\` differences are generated" >> /tmp/comment.txt
         echo "1. The branch may be old if there are unintended differences. Merging the master branch may fix it" >> /tmp/comment.txt
         echo "<!-- skeema:magic:comment -->" >> /tmp/comment.txt
@@ -109,17 +108,22 @@ jobs:
         issue-number: ${{ github.event.pull_request.number }}
         body-includes: "<!-- skeema:magic:comment -->"
 
+    - name: delete comment
+      if: ${{ steps.magic-comment.outputs.comment-id != 0 }}
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.issues.deleteComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: ${{ steps.magic-comment.outputs.comment-id }},
+          })
+
     - name: create comment
-      if: ${{ steps.magic-comment.outputs.comment-id == 0 && steps.skeema-diff.outputs.diff != 0 }}
+      if: ${{ steps.skeema-diff.outputs.diff != 0 }}
       uses: peter-evans/create-or-update-comment@v1
       with:
         issue-number: ${{ github.event.pull_request.number }}
         body: ${{ steps.comment-body.outputs.body }}
 
-    - name: update comment
-      if: ${{ steps.magic-comment.outputs.comment-id != 0 }}
-      uses: peter-evans/create-or-update-comment@v1
-      with:
-        comment-id: ${{ steps.magic-comment.outputs.comment-id }}
-        body: ${{ steps.comment-body.outputs.body }}
-        edit-mode: replace

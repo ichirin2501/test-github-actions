@@ -3,5 +3,6 @@ CREATE TABLE IF NOT EXISTS items (
   name VARCHAR(255) NOT NULL,
   created timestamp NOT NULL,
   updated timestamp NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  KEY idx_updated (updated)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
