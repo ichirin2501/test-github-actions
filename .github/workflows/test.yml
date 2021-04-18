@@ -79,22 +79,20 @@ jobs:
       run: |
         set -o pipefail
         cd ${{ env.skeema_dir }}
-        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n-- skeema:ddl:begin\n"{DDL}";\n-- skeema:ddl:end"' | sed -n '/^-- skeema:ddl:begin/,/^-- skeema:ddl:end/p' | sed -e '/^-- skeema:/d' | tee /tmp/skeema-diff.sql
+        /tmp/skeema-ci/skeema push skeema-diff-ci --allow-unsafe --ddl-wrapper='echo "\n<!-- skeema:ddl:begin -->\n\`\`\`sql\n"{DDL}";\n\`\`\`\n<!-- skeema:ddl:end -->"' 2>/dev/null | sed -n '/^<!-- skeema:ddl:begin -->/,/^<!-- skeema:ddl:end -->/p' | tee /tmp/skeema-diff.sql
         echo "::set-output name=diff::$(cat /tmp/skeema-diff.sql | wc -c)"
 
     - name: create body
       id: comment-body
       run: |
+        echo "<!-- skeema:magic:comment -->" >> /tmp/comment.txt
         echo "_Automatically generated schema diff statements_" >> /tmp/comment.txt
         echo "Update Date: $(date +'%Y-%m-%d %H:%M:%S %z')" >> /tmp/comment.txt
         echo "Compare: https://github.com/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" >> /tmp/comment.txt
-        echo "\`\`\`sql" >> /tmp/comment.txt
         cat /tmp/skeema-diff.sql >> /tmp/comment.txt
-        echo "\`\`\`" >> /tmp/comment.txt
         echo "_Note:_" >> /tmp/comment.txt
         echo "1. Only the \`sql/\` differences are generated" >> /tmp/comment.txt
         echo "1. The branch may be old if there are unintended differences. Merging the master branch may fix it" >> /tmp/comment.txt
-        echo "<!-- skeema:magic:comment -->" >> /tmp/comment.txt
         body=$(cat /tmp/comment.txt)
         body="${body//'%'/'%25'}"
         body="${body//$'\n'/'%0A'}"
