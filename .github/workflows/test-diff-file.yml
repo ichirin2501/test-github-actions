@@ -13,3 +13,6 @@ jobs:
       run: |
         echo "pull_request.base.sha: ${{ github.event.pull_request.base.sha }}"
         echo "pull_request.head.sha: ${{ github.event.pull_request.head.sha }}"
+    - name: git diff
+      run: |
+        git diff --name-only --diff-filter=ACDMRT ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
