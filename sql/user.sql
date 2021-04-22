@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS user_nanika (
   start_at timestamp NOT NULL,
   end_at timestamp NOT NULL,
   description varchar(256) DEFAULT NULL,
+  updated timestamp NOT NULL,
   created timestamp NOT NULL,
   PRIMARY KEY (id),
   KEY idx_created (created)
