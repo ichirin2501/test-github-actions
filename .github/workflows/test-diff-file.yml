@@ -3,6 +3,9 @@ on:
   pull_request:
     branches:
     - master
+  push:
+    branches:
+    - master
 
 jobs:
   test-diff-file:
@@ -11,7 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 100
     - name: echo sha
       run: |
@@ -20,3 +22,6 @@ jobs:
     - name: git diff
       run: |
         git diff --name-only --diff-filter=ACDMRT ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | sed -e 's/\(containers\/[^/]*\).*/\1/g' | grep -E "^containers" | sort | uniq
+    - name: git-diff-test1
+      run: |
+        git diff --name-only --diff-filter=AM @~
