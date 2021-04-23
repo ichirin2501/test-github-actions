@@ -24,4 +24,4 @@ jobs:
         git diff --name-only --diff-filter=ACDMRT ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | sed -e 's/\(containers\/[^/]*\).*/\1/g' | grep -E "^containers" | sort | uniq
     - name: git-diff-test1
       run: |
-        git diff --name-only --diff-filter=AM @~
+        git diff --name-only --diff-filter=ACDMRT @~
