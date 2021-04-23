@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+
+
 CREATE TABLE IF NOT EXISTS user_nanika (
   id int(11) unsigned NOT NULL AUTO_INCREMENT,
   start_at timestamp NOT NULL,
