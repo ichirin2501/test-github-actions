@@ -16,7 +16,8 @@ jobs:
       id: detected-files
       run: |
         detected=0
-        for changed_file in $(git diff --name-only origin/master HEAD); do
+        for changed_file in $(git diff --name-only origin/master HEAD)
+        do
           echo "[debug] changed_file = $changed_file"
           if [[ $changed_file == "README.md" ]]; then
             detected=1
