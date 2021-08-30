@@ -1,0 +1,21 @@
+name: Check update README
+on:
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2 
+
+    - id: changed_files
+      uses: jitterbit/get-changed-files@v1
+    - name: test
+      run: |
+        for changed_file in ${{ steps.changed_files.outputs.all }}; do
+          echo "changed_file = $changed_file"
+        done
