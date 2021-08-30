@@ -12,12 +12,11 @@ jobs:
     - name: checkout
       uses: actions/checkout@v2 
 
-    - id: detected-files
-      uses: jitterbit/get-changed-files@v1
     - name: detected-files
+      id: detected-files
       run: |
         detected=0
-        for changed_file in ${{ steps.changed_files.outputs.all }}; do
+        for changed_file in $(git diff --name-only origin/master HEAD); do
           echo "[debug] changed_file = $changed_file"
           if [[ $changed_file == "README.md" ]]; then
             detected=1
