@@ -18,7 +18,7 @@ jobs:
       run: |
         detected=0
         for changed_file in ${{ steps.changed_files.outputs.all }}; do
-          echo "changed_file = $changed_file"
+          echo "[debug] changed_file = $changed_file"
           if [[ $changed_file == "README.md" ]]; then
             detected=1
           fi
