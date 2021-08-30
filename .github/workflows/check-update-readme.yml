@@ -16,11 +16,11 @@ jobs:
       uses: jitterbit/get-changed-files@v1
     - name: detected-files
       run: |
-        detected="0"
+        detected=0
         for changed_file in ${{ steps.changed_files.outputs.all }}; do
           echo "changed_file = $changed_file"
           if [[ $changed_file == "README.md" ]]; then
-            detected="1"
+            detected=1
           fi
         done
         echo "detected ===> $detected"
@@ -57,7 +57,7 @@ jobs:
           })
 
     - name: create comment
-      if: ${{ steps.detected-files.outputs.detected == "1" }}
+      if: ${{ steps.detected-files.outputs.detected == 1 }}
       uses: peter-evans/create-or-update-comment@v1
       with:
         issue-number: ${{ github.event.pull_request.number }}
