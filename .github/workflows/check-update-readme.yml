@@ -1,0 +1,68 @@
+name: Check update README
+on:
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2 
+
+    - name: fetch origin
+      run: |
+        git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+
+    - name: detected-files
+      id: detected-files
+      run: |
+        detected=0
+        for changed_file in $(git diff --name-only origin/master HEAD)
+        do
+          echo "[debug] changed_file = $changed_file"
+          if [[ $changed_file == "README.md" ]]; then
+            detected=1
+          fi
+        done
+        echo "detected ===> $detected"
+        echo "::set-output name=detected::$detected"
+
+    - name: create body
+      id: comment-body
+      run: |
+        echo "<!-- hogehoge:magic:comment -->" >> /tmp/comment.txt
+        echo "Update Date: $(date +'%Y-%m-%d %H:%M:%S %z')" >> /tmp/comment.txt
+        body=$(cat /tmp/comment.txt)
+        body="${body//'%'/'%25'}"
+        body="${body//$'\n'/'%0A'}"
+        body="${body//$'\r'/'%0D'}"
+        echo ::set-output name=body::$body
+
+    - name: find magic comment
+      uses: peter-evans/find-comment@v1
+      id: magic-comment
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body-includes: "<!-- hogehoge:magic:comment -->"
+
+    - name: delete comment
+      if: ${{ steps.magic-comment.outputs.comment-id != 0 }}
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.issues.deleteComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: ${{ steps.magic-comment.outputs.comment-id }},
+          })
+
+    - name: create comment
+      if: ${{ steps.detected-files.outputs.detected == 1 }}
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: ${{ steps.comment-body.outputs.body }}
