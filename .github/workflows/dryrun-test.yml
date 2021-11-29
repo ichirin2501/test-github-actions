@@ -1,0 +1,30 @@
+name: roadwork-dryrun
+
+on:
+  pull_request:
+    branches: master
+    types:
+      - opened
+      - synchronize
+      - closed
+
+jobs:
+  roadwork:
+    runs-on: ubuntu-latest
+    steps:
+      #### git checkout
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: fetch master
+        run: |
+          git fetch --no-tags --prune --depth=2 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+      #### list diff
+      - name: list updated zones (PR update)
+        if: github.event.pull_request.merged == false && github.event.pull_request.state == 'open'
+        run: |
+          git diff 'remotes/origin/${{ github.base_ref }}' HEAD --name-only
+      - name: list updated zones (PR merge)
+        if: github.event.pull_request.merged == true
+        run: |
+          git diff HEAD\^ HEAD --name-only
