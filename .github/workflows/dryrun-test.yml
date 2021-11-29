@@ -24,7 +24,13 @@ jobs:
         if: github.event.pull_request.merged == false && github.event.pull_request.state == 'open'
         run: |
           git diff 'remotes/origin/${{ github.base_ref }}' HEAD --name-only
+          echo "----------------"
+          git show 'remotes/origin/master' --oneline
+          git show HEAD --oneline
       - name: list updated zones (PR merge)
         if: github.event.pull_request.merged == true
         run: |
           git diff HEAD\^ HEAD --name-only
+          echo "----------------"
+          git show HEAD\^ --oneline
+          git show HEAD --oneline
