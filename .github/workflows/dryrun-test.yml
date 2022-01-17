@@ -19,6 +19,9 @@ jobs:
       - name: fetch master
         run: |
           git fetch --no-tags --prune --depth=2 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+      - name: pipefail test
+        run: |
+          ls -l /hoge | head -n 1
       #### list diff
       - name: list updated zones (PR update)
         if: github.event.pull_request.merged == false && github.event.pull_request.state == 'open'
