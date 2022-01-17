@@ -20,6 +20,7 @@ jobs:
         run: |
           git fetch --no-tags --prune --depth=2 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
       - name: pipefail test
+        shell: bash
         run: |
           ls -l /hoge | head -n 1
       #### list diff
