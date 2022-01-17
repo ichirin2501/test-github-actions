@@ -8,6 +8,8 @@ env:
   skeema_version: '1.4.5'
   skeema_dir: ${{ github.workspace }}/sql
 
+concurrency: test-cc
+
 jobs:
   test:
     runs-on: ubuntu-latest
