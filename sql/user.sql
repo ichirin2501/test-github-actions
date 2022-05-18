@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS users (
   id INT UNSIGNED NOT NULL,
   name VARCHAR(255) NOT NULL,
   created  DATETIME NOT NULL,
-  nums INT UNSIGNED,
+  nums BIGINT UNSIGNED,
   PRIMARY KEY (id),
   KEY idx_created (created),
   KEY idx_name (name)
