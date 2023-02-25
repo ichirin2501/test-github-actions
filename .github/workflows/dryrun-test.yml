@@ -1,4 +1,4 @@
-name: roadwork-dryrun
+name: dryrun
 
 on:
   pull_request:
@@ -9,11 +9,11 @@ on:
       - closed
 
 jobs:
-  roadwork:
+  dryrun:
     runs-on: ubuntu-latest
     steps:
       #### git checkout
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 2
       - name: fetch master
@@ -34,3 +34,15 @@ jobs:
           echo "----------------"
           git show HEAD\^ --oneline
           git show HEAD --oneline
+
+      - name: create comment
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 Thanks for reporting2!'
+            })
