@@ -28,10 +28,10 @@ jobs:
       - name: create comment
         uses: actions/github-script@v6
         with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: ${{steps.get-issue-number.outputs.result}},
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: 'apply comment dayo'
-          })
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{steps.get-issue-number.outputs.result}},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'apply comment dayo'
+            })
