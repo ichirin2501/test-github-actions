@@ -27,7 +27,7 @@ jobs:
         curl -s -L https://github.com/skeema/skeema/releases/download/v${{ env.skeema_version }}/skeema_${{ env.skeema_version }}_linux_amd64.tar.gz > skeema.tar.gz
         tar xzf skeema.tar.gz skeema
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         ref: ${{ github.event.pull_request.base.sha }}
         fetch-depth: 1000
@@ -64,7 +64,7 @@ jobs:
           mysql -h 127.0.0.1 -P 3306 -u root test < $fname
         done
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 1000
