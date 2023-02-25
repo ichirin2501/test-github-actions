@@ -11,14 +11,27 @@ jobs:
       #### git checkout
       - uses: actions/checkout@v3
 
-      - name: create comment
+      - name: get issue number
         uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
+        id: get-issue-number
         with:
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'apply comment dayo'
-            })
+            return (
+              await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                commit_sha: context.sha,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              })
+            ).data[0].number;
+          result-encoding: string
+
+      - name: create comment
+        uses: actions/github-script@v6
+        with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: ${{steps.get-issue-number.outputs.result}},
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: 'apply comment dayo'
+          })
