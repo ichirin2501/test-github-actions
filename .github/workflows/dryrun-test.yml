@@ -51,9 +51,13 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            let content = await fs.readFile('comment.txt', 'utf8')
+            if (trim) {
+              content = content.trim()
+            }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "${{steps.create-dryrun-text.outputs.body}}"
+              body: content
             })
