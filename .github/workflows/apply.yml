@@ -25,6 +25,18 @@ jobs:
             ).data[0].number;
           result-encoding: string
 
+      - name: create apply text
+        id: create-apply-text
+        shell: bash -o pipefail {0}
+        run: |
+          echo -e "## Apply Result\n\n" > comment.txt
+          echo -e "testtest dayo\n\n" >> comment.txt
+          body=$(cat comment.txt)
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo "body=${body}" >> $GITHUB_OUTPUT
+
       - name: create comment
         uses: actions/github-script@v6
         with:
@@ -33,5 +45,5 @@ jobs:
               issue_number: ${{steps.get-issue-number.outputs.result}},
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'apply comment dayo'
+              body: ${{steps.create-apply-text.outputs.body}}
             })
