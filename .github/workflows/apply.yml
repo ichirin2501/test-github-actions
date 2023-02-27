@@ -31,19 +31,16 @@ jobs:
         run: |
           echo -e "## Apply Result\n\n" > comment.txt
           echo -e "testtest dayo\n\n" >> comment.txt
-          body=$(cat comment.txt)
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "body=${body}" >> $GITHUB_OUTPUT
 
       - name: create comment
         uses: actions/github-script@v6
         with:
           script: |
+            const { promises: fs } = require('fs')
+            let content = await fs.readFile('comment.txt', 'utf8')
             github.rest.issues.createComment({
               issue_number: ${{steps.get-issue-number.outputs.result}},
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: ${{steps.create-apply-text.outputs.body}}
+              body: content
             })
