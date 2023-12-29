@@ -36,3 +36,9 @@ jobs:
               repo: context.repo.repo,
               body: content
             })
+
+      - name: dryrun result
+        if: ${{ steps.dryrun_test.outcome == 'failure' }}
+        # When the dryrun test step fails, set this job to failed status
+        run: |
+          exit 1
