@@ -13,9 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: init
-        run: |
-          exit 1
+      # - name: init
+      #   run: |
+      #     exit 1
 
       - name: dryrun test
         id: dryrun_test
