@@ -13,6 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: init
+        run: |
+          exit 1
+
       - name: dryrun test
         id: dryrun_test
         continue-on-error: true
@@ -41,4 +45,5 @@ jobs:
         if: ${{ steps.dryrun_test.outcome == 'failure' }}
         # When the dryrun test step fails, set this job to failed status
         run: |
+          echo "failed to run the dryrun step"
           exit 1
