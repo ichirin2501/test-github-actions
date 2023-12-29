@@ -6,31 +6,29 @@ on:
     types:
       - opened
       - synchronize
-      - closed
 
 jobs:
   dryrun:
     runs-on: ubuntu-latest
     steps:
-      #### git checkout
       - uses: actions/checkout@v3
+
+      - name: pipefaile test
+        run: |
+          ./scripts/echo-test | tee comment
+          STATUS="$?"
+          exit $STATUS
+
+      #### post result
+      - name: post result as comment
+        uses: actions/github-script@v6
         with:
-          fetch-depth: 2
-      - name: fetch master
-        run: |
-          git fetch --no-tags --prune --depth=2 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
-      #### list diff
-      - name: list updated zones (PR update)
-        if: github.event.pull_request.merged == false && github.event.pull_request.state == 'open'
-        run: |
-          git diff 'remotes/origin/${{ github.base_ref }}' HEAD --name-only
-          echo "----------------"
-          git show 'remotes/origin/master' --oneline
-          git show HEAD --oneline
-      - name: list updated zones (PR merge)
-        if: github.event.pull_request.merged == true
-        run: |
-          git diff HEAD\^ HEAD --name-only
-          echo "----------------"
-          git show HEAD\^ --oneline
-          git show HEAD --oneline
+          script: |
+            const { promises: fs } = require('fs')
+            let content = await fs.readFile('comment', 'utf8')
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: content
+            })

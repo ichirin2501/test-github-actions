@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+
+echo "Hi stdout" >&1
+echo "Hi stderr" >&2
