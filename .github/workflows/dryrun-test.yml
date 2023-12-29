@@ -13,15 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: pipefaile test
+      - name: dryrun test
+        id: dryrun_test
+        continue-on-error: true
         shell: bash -o pipefail {0}
         run: |
-          ./scripts/echo-test | tee comment
+          ./scripts/echo-test 2>&1 | tee comment
           STATUS="$?"
           exit $STATUS
 
       #### post result
       - name: post result as comment
+        if: ${{ steps.dryrun_test.outcome == 'success' }} || ${{ steps.dryrun_test.outcome == 'failure' }}
         uses: actions/github-script@v6
         with:
           script: |
